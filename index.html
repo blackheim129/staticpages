@@ -3,27 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login</title>
+    <title>AGLGROUP Secure Login</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to external CSS -->
 </head>
 <body>
-    <h1>Login</h1>
-    <form id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Login</button>
-    </form>
-    <p id="message"></p>
+    <div class="form-container">
+        <h1 class="form-title">Event Subscription callback Secure Credentials</h1>
+        <form id="loginForm" class="login-form">
+            <label for="authType">Authentication Type:</label>
+            <select id="authType" name="authType" required>
+                <option value="basic">Basic</option>
+                <option value="oauth2">OAuth2</option>
+            </select>
+            <br>
 
+            <!-- Basic Authentication Fields -->
+            <div id="basicFields">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <br>
+            </div>
+
+            <!-- OAuth2 Authentication Fields -->
+            <div id="oauth2Fields" class="hidden">
+                <label for="clientId">Client ID:</label>
+                <input type="text" id="clientId" name="clientId" required>
+                <br>
+                <label for="clientSecret">Client Secret:</label>
+                <input type="password" id="clientSecret" name="clientSecret" required>
+                <br>
+                <label for="grantType">Grant Type:</label>
+                <select id="grantType" name="grantType" required>
+                    <option value="authorization_code">Authorization Code</option>
+                    <option value="client_credentials">Client Credentials</option>
+                    <option value="password">Password</option>
+                    <option value="refresh_token">Refresh Token</option>
+                </select>
+                <br>
+                <label for="callbackUrl">Callback URL:</label>
+                <input type="url" id="callbackUrl" name="callbackUrl" required>
+                <br>
+            </div>
+
+            <button type="submit" class="submit-button">Login</button>
+        </form>
+        <p id="message" class="message"></p>
+    </div>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        const authTypeSelect = document.getElementById('authType');
+        const basicFields = document.getElementById('basicFields');
+        const oauth2Fields = document.getElementById('oauth2Fields');
+
+        // Show/hide fields based on authentication type
+        authTypeSelect.addEventListener('change', function () {
+            if (authTypeSelect.value === 'basic') {
+                basicFields.classList.remove('hidden');
+                oauth2Fields.classList.add('hidden');
+            } else if (authTypeSelect.value === 'oauth2') {
+                basicFields.classList.add('hidden');
+                oauth2Fields.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function (event) {
             event.preventDefault(); // Prevent default form submission
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const authType = authTypeSelect.value;
+            let payload = {};
+
+            if (authType === 'basic') {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                payload = { authType, username, password };
+            } else if (authType === 'oauth2') {
+                const clientId = document.getElementById('clientId').value;
+                const clientSecret = document.getElementById('clientSecret').value;
+                const grantType = document.getElementById('grantType').value;
+                const callbackUrl = document.getElementById('callbackUrl').value;
+                payload = { authType, clientId, clientSecret, grantType, callbackUrl };
+            }
 
             // Call the backend API for authentication
             const response = await fetch('https://your-backend-api.com/login', {
@@ -31,7 +92,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
